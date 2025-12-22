@@ -1,10 +1,16 @@
 // ======================
-// 전역 상태
+// 보선녀 VN main.js (HTML 맞춤 풀버전 - 안정판 FIX)
 // ======================
-let playerName = "";
-const SAVE_KEY = "vn_save_v1";
 
-let dialogueBox;
+// ----------------------
+// 전역 상태
+// ----------------------
+let playerName = "";
+const SAVE_KEY = "vn_save_v2"; // 충돌 방지
+
+let dialogueBox = null;
+let leftSprite = null;
+let rightSprite = null;
 
 const state = {
   scene: "day1_morning",
@@ -12,42 +18,43 @@ const state = {
   affection: 0,
   points: { sto: 0, ise: 0, tar: 0 },
 
-  // 코스튬/설정
   outfit: "uniform", // uniform / hoodie / cute
   settings: {
     autoSave: true
   }
 };
 
-// ======================
-// 스토리 데이터 (보선녀 Day1 그대로)
-// ======================
+// ----------------------
+// 스토리 데이터 (씬 구조 FIX)
+// ----------------------
 const scenes = {
   day1_morning: {
-    text: `{name}: 스토마쉐!, 왜이렇게 빨리 나왔어?
-(스토마쉐는 손을 흔들며 미소지었다)
-스토마쉐: {name}! 그냥 ㅎㅎ 할 거 없어서..
+    text: `{name}: 햇살이 나의 body를 감싸는 아침 7시55분, 하하~ 오늘따라 기분이 너무 좋다. 헤헤
+{name}은/는소꿉친구 스토마쉐와 함께 항상 등교했다. 오늘따라 일찍 학교에 가고싶던 {name}은/는 5분일찍 스토마쉐에게로 향했다.
+{name}: 어! 스토마쉐!, 뭐야! 왜이렇게 빨리 나왔어?
+스토마쉐는 손을 흔들며 미소지었다.
+스토마쉐: {name}! 그냥 ㅎㅎ 할 거 없어서.
 {name}: 그래? 빨리 가자.
 스토마쉐: ㅎㅎ 응.
-(학교에 가던 도중, 마트를 지나치려는데 스토마쉐가 제안한다.)
-스토마쉐: {name}, 음료수빵 할래?
+(학교에 가던 도중, 마트를 지나치려는데 스토마쉐가 {name}을/를 톡톡 건든다.)
+스토마쉐: {name}, 목마른데, 음료수빵 할래?
 {name}: 음? 그래 ! 너 나한테 지고 후회하지 마라?
-스토마쉐: 하하 그래`,
+스토마쉐: 그래ㅎㅎ.`,
     choices: [
-      { label: "가위", next: "day1_scissors", effect: { sto: +1 } },
-      { label: "바위", next: "day1_rock", effect: { sto: +1 } },
-      { label: "보", next: "day1_paper", effect: { sto: +1 } }
+      { label: "가위!", next: "day1_scissors", effect: { sto: +1 } },
+      { label: "바위!", next: "day1_rock", effect: { sto: +1 } },
+      { label: "보!", next: "day1_paper", effect: { sto: +3 } }
     ]
   },
 
   day1_scissors: {
     text: `{name}: 으앗! 내가 졌잖아!
-스토마쉐: 잘먹을게 ㅎㅎ`,
+스토마쉐: 잘먹을게, {name} ㅎㅎ`,
     next: "mart1"
   },
 
   mart1: {
-    text: `(마트 안)
+    text: `토디보따 마트에 도착한 스토마쉐와 {name}.
 {name}: 스토마쉐, 다음에 하면 나 겁나 비싼거 먹을거니까 각오해. ㅎㅎ
 스토마쉐: ㅎㅎ그래 나는.. 이거 오꾸마리주스.
 {name}: 넌 옛날부터 그 이상한 주스만 먹더라.
@@ -57,16 +64,17 @@ const scenes = {
   },
 
   day1_rock: {
-    text: `{name}: 하하! 내가 이겼지! 스토마쉐 잘먹을게?`,
+    text: `{name}: 하하! 내가 이겼지롱! 스토마쉐 잘먹을게?
+스토마쉐: ㅎㅎㅎ응`,
     next: "mart2"
   },
 
   mart2: {
-    text: `스토마쉐: ㅎㅎㅎㅎ응 ~ 골라
+    text: `토디보따 마트에 도착한 {name} 그리고 스토마쉐.
 {name}: 야~ 네가 졌는데 좋아하면 이긴 기분이 안들잖아 ㅎㅎ
 스토마쉐: 그치만... 네가 좋..
 {name}: 뭐?
-스토마쉐:하하 좋..좋같다고 ㅎㅎ
+스토마쉐: 하하 좋..좋같다고 ㅎㅎ
 {name}: 아하!
 스토마쉐: 나는 오꾸마리주스 먹어야지~
 {name}: 아니 넌 왜 맨날 그런것만 먹어.
@@ -85,7 +93,7 @@ const scenes = {
   },
 
   day1_paper1: {
-    text: `{name}: 으엑? 뭐야 다시해!
+    text: `{name}: 으엑? 뭐야. 또 비겼잖아..! 다시해!
 스토마쉐: ㅎㅎ`,
     choices: [
       { label: "가위", next: "day1_paper2", effect: { sto: +2 } },
@@ -95,32 +103,39 @@ const scenes = {
   },
 
   day1_paper2: {
-    text: `{name}: ? 뭐여
-스토마쉐:......(볼이 빨갛다.)운명..
-{name}: 뭐..머라는거야.. 에잇! 하지마 이거 학교나 가자.
+    text: `{name}: ? 어..! 뭐야!! 또 비겼...
+스토마쉐: ....
+볼이 빨간 고추잠자리 처럼 물든 스토마쉐, 얼굴을 가리며 중얼거렸다.
+스토마쉐: ...운명..
+{name}: 뭐..머라는거야.. 에잇! 하지마 이거. 학교나 가자.
 스토마쉐: 잠깐.. 그냥 내가 사줄게..
-{name}:그..그럼 나야 땡큐지..!`,
+{name}: 그..그럼 나야 땡큐지..!`,
     next: "mart3"
   },
 
   mart3: {
-    text: `스토마쉐: {name}, 뭐 살거야?
-{name}: 나는.. 이거..!
+    text: `마트에 도착한 두 사람.
+스토마쉐: {name}, 뭐 살거야?
+{name}: 나는.. 이거..! 게복파쭈털
 스토마쉐: ..나도 그걸로 해야겠다 ㅎㅎ
-{name}: 그래! 가위바위보 오지게 했더니 좀 재밌었다 ㅎㅎㅋㅋ
-스토마쉐:ㅎㅎ 재밌었어.. 아주머니 계산이요.
+{name}: 그래! 와 근데 이렇게 겹칠수가 있냐? 좀 재밌었다 ㅎㅎㅋㅋ
+스토마쉐: ㅎㅎ 재밌었어.. 아주머니 계산이요.
 아주머니: 이거 두개?
 스토마쉐: ..아! 이거 초콜릿도 하나요
 아주머니: 3500원이다.
-스토마쉐: {name}, 이거 먹어
+스토마쉐: {name}, 이거 먹어.
 {name}: 헐! 이건 뭐야? 나 당 떨어지는 건 어떻게 알고~
 스토마쉐: ㅎㅎ 나잖아 척이면 척이지.`,
     next: "school1"
   },
 
   school1: {
-    text: `스토마쉐: {name}, 학교 끝나고 봐.
-{name}: 응! 수업 잘 들어~`,
+    text: `{name}: 캬~ 잘 마셨다. 역시 딱 타이밍이 맞다니까?
+    학교 앞에 도착한 둘은 손을 흔들며 인사한다.
+    스토마쉐: {name}, 학교 끝나고 봐.
+{name}: 응! 너도 수업 잘 들어~
+스토마쉐는 {name}이/가 사라질 때 까지 {name}을/를 쳐다보았다.
+스토마쉐: ..잘가.`,
     next: "day1_school"
   },
 
@@ -128,50 +143,58 @@ const scenes = {
     text: `평범하게 도착한 교실은 생각보다 소란스러웠다.
 전학생이 왔다는 소문 때문이었다.
 {name}: 우리반에 전학생이 올 줄이야.. 그것도 고2 때..
-잘생겼고, 묘하게 거리감이 느껴지는 사람이었다.
-선생님: 자 다들 조용히하고 앉아
-(웅성했던 반이 조용해졌다.)
-선생님: 전학생 소개는 딱히 할 필요 없을 것 같으니까, 이세치슈, 저기 뒤에 {name},
-옆에 앉으면 된다.
+드르륵 하는 소리가 들리며 선생님과 한 남학생이 들어왔다. 
+너무 멀어서 잘 보이진 않았지만 참 아리따운 얼굴을 가지고 있었던 것 같다. 옆 분단의 남미새 '멍나쭈'가 그를 보고 코피를 흘렸기 때문이다.
+하지만 묘하게.. 거리감이 느껴지는 사람이었다.
+선생님: 자 다들 조용히하고 앉아.
+겨투독추: 다 조용한데요.
+선생님: 깔루.
+선생님: 고2 때 무슨 전학생이 오는지는 모르겠다. 전학생 소개는 딱히 필요 없을 것 같으니까, 흠 그래.
+선생님: '이세치슈', 저기 뒤에 {name} 옆에 앉으면 된다.
 이세치슈: 네.
-{name}: (심지어 내 옆..)
-우연히도, 그는 {name}의 옆자리에 앉았다.
-{name}: (얘 냄샌가? 향이 좋다 헤헤...)`,
+{name}: (음? 어?! 내 옆..? 저렇게 잘생긴 애가 내 옆이라니.. 이게 무슨 드라마 같은.. 헤헤.. 조으다..)
+{name}은/는 헤벌레한 표정으로 이세치슈를 바라보며 손을 흔들었다.
+{name}: (근데 이름 왜저래.)
+우연히도, 그는 {name}의 옆자리에 앉았다. 순간 그가 자리에 앉자마자, 그의 곁에서 매실향과, 옥동자 아이스크림 향이 나는 듯했다.
+본능적으로 {name}은/는 조용히 냄새를 맡고 있는데 운명적으로 그 때, 이세치슈가 {name}쪽으로 고개를 돌렸다.
+{name}: (얘 냄샌가? 향이 좋..)..!!!!
+이세치슈: ...? 할 말 있어?`,
     choices: [
-      { label: "한 번 인사한다", next: "hi1", effect: { ise: +1 } },
+      { label: "한 번 인사한다", next: "hi1", effect: { ise: +0.3 } },
       { label: "향이 좋다고 한다.", next: "scent1", effect: { ise: +1 } }
     ]
   },
 
   hi1: {
-    text: `{name}: 아.. 안녕? 이세치슈라고 했지? 나는.. {name}이라고 해.
-(싱긋) 잘 부탁해~
+    text: `{name}: ..! 이세치슈라고 했지? 나는 {name}라고/이라고 해. 앞으로 잘 부탁해..!
 이세치슈: ....응. 그래
+이세치슈는 한 번 {name}을/를 힐끔 보더니 고개를 다시 돌렸다.
 {name}: (아니 뭐야? 이게..끝? 뻘쭘하네..)
 {name}: ..하하..하.. 잘 지내자.
-이세치슈: ....(말없이 앞을 본다.)
+이세치슈: ...
+이세치슈는 아무 말 없이 앞만 바라보았다.
 {name}: (.......망한듯.)`,
     next: "day1_class"
   },
 
   scent1: {
-    text: `{name}: (조심스럽게)컹컹 킁킁
+    text: `{name}: (조심스럽게) 컹컹컹 킁킁
 이세치슈: ??? 뭐해?
 {name}: 그... 너 향수 써? 향 되게 좋다.
 이세치슈: ...향?
-(잠깐 멈칫하더니 시선을 피한다.)
-이세치슈: 그냥... 비누냄새야.
+이세치슈는 그 말에 멈칫하다가, 고개를 다시 돌렸다.
+이세치슈: 그냥... 비누냄새야. 
 {name}: (헉 귀여운데?)아..그래?
-이세치슈:.. 좀 부담스럽다.
+이세치슈:.. 또 할 말 있어? 부담스럽네.
 {name}: (흠칫)아.. 아..그 미..미안..하하
-이세치슈:...응`,
+이세치슈는 조용히 창문을 바라보았다.
+이세치슈: ...(세릴라..)`,
     next: "day1_class"
   },
 
   day1_class: {
-    text: `어색한 기류가 지속되고, {name}은 분위기를 풀려 애썼지만 좀처럼
-풀리지가 않았다.
-수업 도중, {name}는 이세치슈의 책상을 흘끔 보았다.
+    text: `어색한 기류가 지속되고, {name}은/는 분위기를 풀려 애썼지만 좀처럼 풀리지가 않았다.
+수업 도중, {name}은/는 이세치슈의 책상을 흘끔 보았다.
 연필이 없어 보였다.
 
 연필을 하나 건네려 하자,
@@ -179,87 +202,184 @@ const scenes = {
 
 "이미 있어."`,
     choices: [
-      { label: "아무 일 아닌 척 넘긴다", next: "class3", effect: { ise: 0 } },
+      { label: "아무 일 아닌 척 넘긴다", next: "class3", effect: { ise: +1 } },
       { label: "괜히 민망해진다", next: "class4", effect: { ise: -1 } }
     ]
   },
 
   class3: {
-    text: `{name}:순간 당황했지만 바로 그를 바라보았다.
-뭐래? 그냥 나는 기지개 한 것 뿐인데, 착각도 유분수지..!!
+    text: `{name}: 순간 당황했지만 바로 그를 바라보았다.
+뭐래? 그냥 나는 기지개 한 것 뿐인데, 착각도 지리네?
 이세치슈: ...! 아..그래? ..미안.
 {name}: 미안할 것 까지야..
-(분위기가 더 어색해졌다.)
+분위기가 더 어색해진 것 같다.
 {name}: (..나 뭐하냐)`,
     next: "day1_store"
   },
 
   class4: {
     text: `{name}: 아.. 그..그래? 아..
-(고개를 돌린다. 얼굴과 엉덩이가 빨개진 느낌이다)
-이세치슈: ..({name}을 보며) 마음만 받을게.
+{name}은/는 부끄러움에 고개를 돌렸다. 얼굴이 빨개진 느낌이다.
+이세치슈는 {name}을/를 바라보았다.
+이세치슈: ..마음만 받을게.
 {name}: 어..어..
-(분위기는 더 어색해졌다.)`,
+분위기는 더 어색해졌다.`,
     next: "day1_store"
   },
 
+  // ✅ day1_store는 “매점 선택”만 담당 (여기서 dd1/dd2/dd3로 이동)
   day1_store: {
-    text: `종이쳤다.
-기분 전환을 위해 매점에 들렀지만,
-카드가 없는 걸 눈치챘다. 이미 계산대 앞이라서
-우물쭈물 하고있었는데..
-매점이모: 학생 계산안할거야?
-{name}: 아..그. ...네..
-???: 잠깐 이모, 이 애 것도 같이 계산이요~
-매점이모: 그려. 5400원.
-어떤 선배가 아무 말 없이 음료수를 대신 계산해주었다.
-{name}: 어..저기..!`,
+    text: `딩동댕동, 수업이 끝나는 종이쳤다.
+{name}은 기분전환을 위해 매점에 들렀다.
+{name}: 하... 뭐 사지. 우울해ㅠ..`,
     choices: [
-      { label: "고맙다고 90도 인사를 3번 하며 인사한다", next: "ff", effect: { tar: +1 } },
-      { label: "어색하게 고개만 숙인다", next: "ff1", effect: { tar: 0 } }
+      {
+        label: "빅버키매치스를 산다. (버섯의 발톱 + 세리피앙씨 수염맛)",
+        next: "dd1",
+        effect: { tar: +2 }
+      },
+      {
+        label: "이송라지때를 산다. (김장철 비단뱀의 비단 + 다람쥐 코털 향 34%)",
+        next: "dd2",
+        effect: { tar: +1 }
+      },
+      {
+        label: "게랑도루민쭈크를 산다. (담임의 특제 발냄새 고급진 맛)",
+        next: "dd3",
+        effect: { tar: +1 }
+      }
     ]
   },
 
-  ff: {
-    text: `???: 풉 ㅋ 그래
-???: (생글거리며) 됐어.~ 나중에 갚어~ㅋ
-사라진 선배.
-{name}: 아니.. 이름도 안 알려주셨으면서
-..헤헤.. 근데 좀 잘생겼따...
+  // ✅ dd1/dd2/dd3 씬을 “최상위”에 따로 정의 (이게 핵심 FIX)
+  dd1: {
+    text: `{name}: ㅠ 그래... 세리피앙씨 수염맛이나 맛봐야지. ㅠ 아주머니 계산이요.
+매점이모: 그래. 5000원이다. 
+{name}: 네ㅠ 여기..
+주머니에 손을 넣어 지갑을 꺼내려는데, 손에 아무것도 집히지가 않았다.
+{name}: 에? 응? 아??!?! 헉..!!
+{name}는/은 지갑을 반에 놔두고 온 것이었다.
+{name}: ㅎㅎ..ㅎㅎ
+매점이모: ? 뭐하냐
+{name}는/은 미인계를 쓰기로 결심했다.
+{name}: 아.. 이모 외..외상 안될까...요..?
+매점이모: 개가 짖는구나.
+{name}: 안돼..!!!!!!!!!!
+{name}는/은 머리를 쥐어잡으며 좌절한다. 하지만 그 때...`,
+    next: "baekdor1"
+  },
 
-생글거리는 미소.
-이름은 묻지 못했지만,
-기억 속에 '착한 선배'로 남았다.`,
-    next: "schoollife"
+  dd2: {
+    text: `{name}: 하... 그래... 이송라지때나 사볼까. 아주머니 계산이요.
+매점이모: 4700원.
+{name}: 네.. 여기...
+주머니를 뒤적이는 {name}, 하지만 손에는 아무것도 집히지 않았다.
+{name}: ...어?
+{name}: 지갑이... 없어...!!!
+매점이모: 뭐해.
+{name}: 이모... 오늘만... 저 단골인데 아잉~ 앙~ 하루만 외상 안될까...요? ㅎㅎ
+매점이모: 월월! 월월! 개소리 탐지 개소리 탐지!
+{name}: 이..이모..ㅠㅠㅠㅠ
+그 순간...`,
+    next: "baekdor2"
+  },
+
+  dd3: {
+    text: `{name}: 좋아... 고급진 발냄새 맛으로 기분전환... 아주머니 계산이요.
+매점이모: 5300원이다.
+{name}: 네 잠시만용..! 
+주머니에 손을 넣는 {name}그런데... 주머니에..지갑이 없다..!
+{name}: ...??? 뭐여 ㅅㅂ
+{name}: 지갑이... 없는데...?
+매점이모: 뭐하냐
+{name}: 이모... 저 돈이 없는데 대신 내주시면..안되겠..
+매점이모: 뒤에 줄 안보이니? ㅃㄹ 개소리 말고 끄지라.
+생독찌라: 아 앞에 ㅃㄹ 비켜  겨토르뱅도 녹겠어.
+포뱌디아: 아! 내 핫바. 백지민 그거 내꺼라고!!
+{name}:...ㅠ 알겠어요..ㅠ 
+그 때, {name}의 뒤에 있던 사람이 카드를 내밀며 다가왔다...`,
+    next: "baekdor3"
+  },
+
+  baekdor1: {
+    text: `???: 빅버키매치스.. 나도 이거 좋아하는데... 잠깐 이모, 이 sweet girl 것도 같이 계산이요~
+매점이모: ? 뭐여? 여친이여? 그려. 5400원.
+누군가 {name}의 음료수를 대신 계산해주었다.
+염색을 한 것 같은 밝은 된장색 머리카락에, 명찰색을 보아하니 3학년 같았다.
+{name}: 어..저기..! 선배..!`,
+    choices: [
+      { label: "고맙다고 90도 인사를 3번 하며 인사한다", next: "ff", effect: { tar: +3 } },
+      { label: "어색하게 고개만 약간 까딱인다.", next: "ff1", effect: { tar: +1 } }
+    ]
+  },
+
+  
+  baekdor2: {
+    text: `???: 이송라지때? 하하 취향 참 독특하네? 이모 얘 거 포함해서 살게요. 
+매점이모: 뭐여? 남친이여? 5700원만 내. 200원은 뜨거운 사랑을 보고 꿔줌.
+{name}의 어깨에 팔을 올리고 친한 척 대신 돈을 내주는 모습에 {name}은/는 놀랐지만 바로 고개를 돌려 얼굴을 보았다.
+염색을 한 것 같은 밝은 된장색 머리카락에, 명찰 색을 보아하니 3학년 같았다.
+{name}: 어..저기..! 선..선배!`,
+    choices: [
+      { label: "고맙다고 90도 인사를 3번 하며 인사한다", next: "ff", effect: { tar: +3 } },
+      { label: "어색하게 고개만 약간 까딱인다.", next: "ff1", effect: { tar: +1 } }
+    ]
+  },
+
+  
+  baekdor3: {
+    text: `???: 이모~ 얘 것 포함해서 결제 할게요~ 
+매점이모: 이 시대의 sweet boy 구만. 그래 너의 열정을 봐서 5500원만 받겠다.
+???: 감~사합니~다. 
+갑자기 매점이모와 함께 희랑차깔우의 감사합니다~(19금 노래)를 부르는 수상한 남성, 한차례 공연이 끝나고 {name}에게로 오는 남성
+{name}: 그..
+염색을 한 것 같은 밝은 된장색 머리카락에, 명찰색을 보아하니 3학년 같았다.
+{name}: 어..저기..! 선배이신 것 같은데..`,
+    choices: [
+      { label: "고맙다고 90도 인사를 3번 하며 인사한다", next: "ff", effect: { tar: +3 } },
+      { label: "어색하게 고개만 약간 까딱인다.", next: "ff1", effect: { tar: +1 } }
+    ]
+  },
+  ff: {
+    text: `???: 풉 ㅋ 그래 제사짓냐. 
+    선배는 조토피아 여우 같은 미소를 지으며 머리를 쓸었다.
+???:  됐어.~ 나중에 갚어~ㅋ
+그 한 마디를 남긴 후, 이름모를 선배는 담배연기처럼 사라졌다.
+{name}: 아니.. 이름도 안 알려주셨으면서 ..헤헤.. 근데 좀 잘생겼따...
+
+기억에 남는 거라곤 생글거렸던 그의 미소. 비록 이름은 묻지 못했지만, 언젠가 또..
+다시 만날 것 같은 예감(과자 아님)이 들었다.`,
+next: "schoollife"
   },
 
   ff1: {
     text: `???: 그래~ 됐어 나중에 갚어 ㅎㅎ
-{name}: ...저 선..! 사라졌다....
-{name}: 아니 이름도.. 안 알려주셨으면서..
-..잘생겼다..헤..`,
+{name}: ...저 선..! 어머나..! 사라졌다....
+{name}: 아니 이름도.. 안 알려주셨으면서.. 근데.. 되게 잘생겼다.. 헤헤 키가 230cm는 되는 것 같아..
+그 짧은 한 마디를 남기고 떠난 그는 {name}에게 잊지 못할 아름다운 미소를 그녀의 눈동자, 목젖, 식도, 그리고 마음 깊은곳에 선사해주었다.
+{name}: 잘 모르겠지만.. 또 다시 저 선배와 만날 것 같아..!`,
     next: "schoollife"
   },
 
   schoollife: {
-    text: `남은 수업 시간동안 이세치슈의 잘생긴 외모때문에
-그를 흘끔 보긴 했지만, 별 대화는 없었다. 
-그렇게 학교가 끝나고, {name}은 곧장 반에서 뛰쳐나가 스토마쉐에게 향했다.
+    text: `남은 수업 시간동안 이세치슈의 잘생긴 외모때문에 그를 흘끔 보긴 했지만, 별 대화는 없었다.
+그렇게 학교가 끝나고, {name}은 곧장 반에서 뛰쳐나가 스토마쉐에게로 향했다. 
+왜냐하면 오늘은 바로 스토마쉐와 약속한 한달에 5번 있는 '스볶이데이'이기 때문이다.
 {name}: 스토마쉐~ 가자!! 떡볶이 먹어야해!
-스토마쉐: 알았어.ㅎㅎ 가자!
-스토마쉐와 복도를 걷는데 사물함 쪽에서 이세치슈를 보았다. 자연스레 눈길이 그쪽으로
-향했는데 그 옆에는..`,
+스토마쉐: 알겠어! ㅎㅎ 가자.
+스토마쉐와 복도를 걷는데 사물함 쪽에서 이세치슈의 귀여운 뒤통수를 보았다. 자연스레 눈길이 그쪽으로 향했는데 그 옆에는..`,
     next: "samul"
   },
 
   samul: {
     text: `아라랑궁: 이세치슈~ 학교 끝나고 어디가? 나랑 노래방이나 갈래? 아니면..
-이세치슈: 아니. 오늘 바로 가봐야해서. 
+이세치슈: 아니. 오늘 바로 가봐야해서.
 아라랑궁: ...그래? ...그럼~ 연락처라도 줘! 연락하게.
 이세치슈:..... 여기.
-이세치슈와 아라랑궁의 대화를 본 {name},보면 안될 걸 본 기분에 바로 고개를 돌렸다.
+이세치슈와 아라랑궁의 대화를 본 {name}, 보면 안될 걸 본 기분에 바로 고개를 돌렸다.
+움찔거리는 소리에 고개를 돌린 아라랑궁과 이세치슈
 아라랑궁: ? 뭐야 쟨.. ㅎㅎ 아무튼 이세치슈 낼 봐~
-이세치슈:..응`,
+이세치슈: ..응.`,
     next: "schoollife1"
   },
 
@@ -271,49 +391,51 @@ const scenes = {
   },
 
   day1_after: {
-    text: `하교 후, 
-스토마쉐: 아줌마 떡볶이3인분, 순대2인분, 오뎅 5개만요~
+    text: `하교 후,
+스토마쉐: 아줌마 떡볶이3인분, 순대4인분, 오뎅 5개만요~
 똥뽂이 아줌마: 사람이냐 니들이.
-스토마쉐와 함께 떡볶이를 먹었다.
-스토마쉐는 말없이 휴지를 꺼내
-{name}의 입가를 닦아주었다.
-{name}: 앙 부끄럽게 하하하 고마웡~
-스토마쉐: 묻히고 먹냐 애야? 
-{name}: 스토마쉐, 오늘 우리반에 전학생 온거 알아?
-스토마쉐: 어 들었어. 남자애라며, 잘생겼다던데 넌 어때?
-{name}: 인정, 잘생기긴 함. 겁나
-스토마쉐:..그래?
-{name}: 근데 좀 무서워. ㄷㄷ 약간 말을 못걸겠어.
-스토마쉐: 말을..
+15분쯤 지났을까, 주문한 메뉴가 나오고 {name}와/과 스토마쉐는 맛있는 dinner time을 보냈다.
+스토마쉐는 {name}의 두꺼운 턱살에 묻은 떡볶이 국물을 보았다. 그러고는 말없이 휴지를 꺼내 {name}의 입가를 닦아주었다.
+{name}: 앙 부끄럽게.. 하하하 고마워..헤헤..
+스토마쉐: chill chill 치 못하기는 ㅎㅎ.
+{name}: 뭐래. 암튼 그렇고 스토마쉐, 오늘 우리반에 전학생 온거 알아?
+스토마쉐: 어 들었어. 남자애라며, 잘생겼다던데 넌 어떤데?
+순간 스토마쉐의 눈빛이 차갑게 변했다. 하지만 약간은 풀이 죽은 개처럼 보이기도 했다.
+{name}: 솔직히 좀 개개개개개개 잘생기긴 했어. 약간 배우 드빠녹통 느낌?
+스토마쉐: ..그래? ..
+{name}: 근데 좀 무서워. 난 친해지려고 장난 좀 쳤는데... 말을 못걸겠어.
+스토마쉐: ...그렇구나. 
+그 때 {name}은/는 보았다. 스토마쉐의 표정이 약간 굳었다는 것을. 당황한 {name}은/는 고개를 더 돌려 창문을 바라보았다.
+지나가는 사람들과 도로를 달리는 핑크버스. 그 때 {name}의 머리에 무언가 푸슝푸슝하고 지나갔다.
 {name}: 꺅! 그건 그렇고 스토마쉐 몇시야? 아 버스 놓치면 망하는데
-스토마쉐: ..응? 헐! 2분남았는데? 
-(짐을 싸며)
-{name}: 스토마쉐...! 나 먼저 간다!!!
-스토마쉐: 응? 어..어!`,
+스토마쉐: ..응? 헐! 2분남았는데?
+황급히 자신의 가방을 싸고 옷을 입는 {name}, 대충 옷을 걸치고 떡볶이집 문을 연다.
+{name}: 스토마쉐...! 나 먼저 간다!!! 으아아악!!
+스토마쉐: 응? 어..어! 내일..보자..!`,
     next: "bus_station"
   },
 
   bus_station: {
-    text: `달리는 {name}, 
-{name}: 헉헉..! 꺅!!! 미친.. 안돼!! 잠시만요
-!!!920번 버스를 눈앞에서 놓쳤다.
+    text: `달리는 {name},
+{name}: 헉헉..! 꺅!!! 미친.. 안돼!! 잠시만요!!!!!!!! 제발!! 
+{name}은/는 920번 버스를 눈앞에서 놓쳤다.
 
-(버스 정류장에서 무릎을 꿇은채 좌절한다.)
+자신의 바로 앞을 지나간 버스를 바라보며 버스 정류장에서 무릎을 꿇은채 좌절한다.
 
-지나가는 버스 안,
-이세치슈의 모습이 스쳐 보였다.
-(눈이 마주친 둘)
+그 때, 온 세상이 멈춘듯 주변이 고요해졌다. 
+지나가는 버스안에서..... 이세치슈의 모습이 스쳐 보였다.
+둘은 눈을 마주쳤다.
 
 {name}: 뭐야.. 얘도 나랑 같은 버스를 타는 걸까?`,
     next: "day1_end"
   },
 
   day1_end: {
-    text: `집으로 돌아오는 길,
-{name}는 문득 생각했다.
-
+    text: `집으로 터벅터벅 돌아오는 길, {name}은/는 문득 생각했다. 
+    {name}: 오늘 참 많은 일이 있었던 것 같네....
+{name}은/는 몰랐다.
 이 사소한 하루가,
-앞으로의 관계에 어떤 의미를 갖게 될지.
+앞으로의 관계에 어떤 의미를 갖게 될지를...
 
 ── Day 1 종료 ──`,
     choices: [{ label: "Day 2로", next: "day2_start" }]
@@ -327,9 +449,11 @@ const scenes = {
   }
 };
 
-// ======================
-// VN 스크립트 파서
-// ======================
+// ----------------------
+// 공통 util
+// ----------------------
+function getScene(id) { return scenes[id]; }
+
 function parseScript(rawText) {
   const lines = (rawText || "")
     .split("\n")
@@ -356,10 +480,6 @@ function parseScript(rawText) {
   return script;
 }
 
-function getScene(id) {
-  return scenes[id];
-}
-
 function getSceneScript(sceneId) {
   const scene = getScene(sceneId);
   if (!scene) return [{ type: "narration", text: `씬을 찾을 수 없어: ${sceneId}` }];
@@ -367,9 +487,6 @@ function getSceneScript(sceneId) {
   return scene.__scriptCache;
 }
 
-// ======================
-// 토스트 + 스냅샷
-// ======================
 function getPointsSnapshot() {
   return {
     sto: state.points.sto ?? 0,
@@ -391,16 +508,9 @@ function showToast(msg) {
   showToast.__t = setTimeout(() => el.classList.remove("show"), 1300);
 }
 
-// ======================
-// 효과
-// ======================
 function applyEffect(effect) {
   if (!effect) return;
-
-  if (typeof effect === "number") {
-    state.affection += effect;
-    return;
-  }
+  if (typeof effect === "number") { state.affection += effect; return; }
 
   if (typeof effect === "object") {
     for (const [key, val] of Object.entries(effect)) {
@@ -411,12 +521,159 @@ function applyEffect(effect) {
   }
 }
 
-// ======================
-// 렌더/진행
-// ======================
+// ----------------------
+// 스프라이트 시스템 (경로 통일 FIX)
+// 준비 파일: img/sto.png, img/ise.png
+// ----------------------
+function setSprite(side, src) {
+  const el = side === "left" ? leftSprite : rightSprite;
+  if (!el) return;
+  if (!src) {
+    el.classList.add("hidden");
+    el.removeAttribute("src");
+    return;
+  }
+  el.src = src;
+  el.classList.remove("hidden");
+}
+
+function setSpeaking(side) {
+  if (!leftSprite || !rightSprite) return;
+
+  const leftHidden = leftSprite.classList.contains("hidden");
+  const rightHidden = rightSprite.classList.contains("hidden");
+  if (leftHidden && rightHidden) return;
+
+  if (side === "left") {
+    leftSprite.classList.remove("dim");
+    rightSprite.classList.add("dim");
+  } else if (side === "right") {
+    rightSprite.classList.remove("dim");
+    leftSprite.classList.add("dim");
+  } else {
+    leftSprite.classList.remove("dim");
+    rightSprite.classList.remove("dim");
+  }
+}
+
+// ----------------------
+// 상태창/모달/오버레이
+// ----------------------
+function setText(id, v) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.textContent = String(v ?? "");
+}
+
+function updateStatusPanelLabels() {
+  setText("stoStatus", state.points.sto ?? 0);
+  setText("iseStatus", state.points.ise ?? 0);
+  setText("tarStatus", state.points.tar ?? 0);
+  setText("outfitLabel", state.outfit);
+  setText("autosaveLabel", state.settings.autoSave ? "ON" : "OFF");
+}
+
+function openOverlay(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.remove("hidden");
+}
+
+function closeOverlay(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add("hidden");
+}
+
+function openModal(title, builder) {
+  const overlay = document.getElementById("modalOverlay");
+  const t = document.getElementById("modalTitle");
+  const body = document.getElementById("modalBody");
+  if (!overlay || !t || !body) return;
+
+  t.textContent = title;
+  body.innerHTML = "";
+  builder(body);
+
+  overlay.classList.remove("hidden");
+}
+
+function closeModal() {
+  closeOverlay("modalOverlay");
+}
+
+function makeBtn(label, onClick, className = "btn") {
+  const b = document.createElement("button");
+  b.className = className;
+  b.textContent = label;
+  b.addEventListener("click", onClick);
+  return b;
+}
+
+// ----------------------
+// 화면 전환
+// ----------------------
+function showScreen(idToShow) {
+  const ids = ["titleScreen", "nameScreen", "gameScreen"];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (!el) continue;
+    if (id === idToShow) el.classList.remove("hidden");
+    else el.classList.add("hidden");
+  }
+}
+
+// ----------------------
+// 저장/불러오기
+// ----------------------
+function saveGame() {
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ playerName, state }));
+  } catch (e) {
+    console.warn("save failed", e);
+  }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const data = JSON.parse(raw);
+
+    const pn = String(data.playerName || "").trim();
+    if (!pn) return false;
+    playerName = pn;
+
+    const s = data.state || {};
+    state.scene = s.scene || "day1_morning";
+    state.line = Number.isFinite(s.line) ? s.line : 0;
+    state.affection = Number.isFinite(s.affection) ? s.affection : 0;
+    state.points = (s.points && typeof s.points === "object") ? s.points : { sto: 0, ise: 0, tar: 0 };
+    state.outfit = s.outfit || "uniform";
+    state.settings = (s.settings && typeof s.settings === "object") ? s.settings : { autoSave: true };
+    if (typeof state.settings.autoSave !== "boolean") state.settings.autoSave = true;
+
+    return true;
+  } catch (e) {
+    console.warn("load failed", e);
+    return false;
+  }
+}
+
+// ----------------------
+// 렌더/진행 (빈 스크립트 보호 FIX + 스프라이트 경로 FIX)
+// ----------------------
 function render(textEl, namePlateEl, choicesEl) {
   const scene = getScene(state.scene);
   const script = getSceneScript(state.scene);
+
+  // ✅ 빈 스크립트 보호
+  if (!script || script.length === 0) {
+    namePlateEl.style.display = "none";
+    textEl.textContent = "대사가 비어있음! scene.text 확인해줘.";
+    choicesEl.innerHTML = "";
+    return;
+  }
 
   if (state.line < 0) state.line = 0;
   if (state.line >= script.length) state.line = script.length - 1;
@@ -424,14 +681,33 @@ function render(textEl, namePlateEl, choicesEl) {
   const cur = script[state.line] || { type: "narration", text: "" };
   const rep = (s) => (s || "").replaceAll("{name}", playerName);
 
-  // 스타일 토글
+  // 대사/나레이션 스타일 + outfit dataset
   if (dialogueBox) {
     dialogueBox.classList.toggle("isDialogue", cur.type === "dialogue");
     dialogueBox.classList.toggle("isNarration", cur.type !== "dialogue");
+    dialogueBox.dataset.outfit = state.outfit;
   }
 
+  // ✅ 스프라이트 자동 배치
+  if (cur.type === "dialogue") {
+    const sp = rep(cur.speaker);
+    if (sp.includes("스토마쉐")) {
+      setSprite("left", "img/sto.png");  // ✅ 경로 통일
+      setSpeaking("left");
+    } else if (sp.includes("이세치슈")) {
+      setSprite("right", "img/ise.png"); // ✅ 경로 통일
+      setSpeaking("right");
+    } else {
+      setSpeaking(null);
+    }
+  } else {
+    setSpeaking(null);
+  }
+
+  // 선택지 초기화
   choicesEl.innerHTML = "";
 
+  // 텍스트 출력
   if (cur.type === "dialogue") {
     namePlateEl.style.display = "inline-block";
     namePlateEl.textContent = rep(cur.speaker);
@@ -441,11 +717,12 @@ function render(textEl, namePlateEl, choicesEl) {
     textEl.textContent = rep(cur.text);
   }
 
+  // 자동저장
+  if (state.settings.autoSave) saveGame();
+
+  // 마지막 줄이 아니면 끝
   const isLastLine = state.line >= script.length - 1;
-  if (!isLastLine) {
-    if (state.settings.autoSave) saveGame();
-    return;
-  }
+  if (!isLastLine) return;
 
   // 마지막 줄이면 선택지 표시
   if (Array.isArray(scene?.choices) && scene.choices.length > 0) {
@@ -464,15 +741,15 @@ function render(textEl, namePlateEl, choicesEl) {
         const dTar = after.tar - before.tar;
 
         const msgs = [];
-        if (dSto) msgs.push(`스토마쉐 ${dSto > 0 ? `+${dSto}` : `${dSto}`}`);
-        if (dIse) msgs.push(`이세치슈 ${dIse > 0 ? `+${dIse}` : `${dIse}`}`);
-        if (dTar) msgs.push(`선배 ${dTar > 0 ? `+${dTar}` : `${dTar}`}`);
-        if (msgs.length) showToast(`호감도 변동: ${msgs.join(" / ")}`);
+        if (dSto) msgs.push(`스토마쉐 ${dSto > 0 ? `+${dSto}` : dSto}`);
+        if (dIse) msgs.push(`이세치슈 ${dIse > 0 ? `+${dIse}` : dIse}`);
+        if (dTar) msgs.push(`선배 ${dTar > 0 ? `+${dTar}` : dTar}`);
+        if (msgs.length) showToast(msgs.join(" / "));
 
         if (choice.reset) {
           state.affection = 0;
           state.points = { sto: 0, ise: 0, tar: 0 };
-          showToast("호감도 초기화!");
+          showToast("호감도가 초기화되었습니다.");
         }
 
         if (!choice.next || !getScene(choice.next)) {
@@ -489,17 +766,14 @@ function render(textEl, namePlateEl, choicesEl) {
 
       choicesEl.appendChild(btn);
     }
-
-    if (state.settings.autoSave) saveGame();
-    return;
   }
-
-  if (state.settings.autoSave) saveGame();
 }
 
 function advance(textEl, namePlateEl, choicesEl) {
   const scene = getScene(state.scene);
   const script = getSceneScript(state.scene);
+
+  if (!script || script.length === 0) return;
 
   if (state.line < script.length - 1) {
     state.line += 1;
@@ -508,8 +782,10 @@ function advance(textEl, namePlateEl, choicesEl) {
     return;
   }
 
+  // 마지막 줄인데 선택지 있으면 진행 막기
   if (Array.isArray(scene?.choices) && scene.choices.length > 0) return;
 
+  // next 있으면 이동
   if (scene?.next) {
     if (!getScene(scene.next)) {
       alert(`다음 씬이 없거나 오타야: "${scene.next}"`);
@@ -525,102 +801,111 @@ function advance(textEl, namePlateEl, choicesEl) {
   alert("끝! (다음 씬/선택지를 추가해줘)");
 }
 
-// ======================
-// 세이브/로드
-// ======================
-function saveGame() {
-  try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ playerName, state }));
-  } catch (e) {
-    console.warn("save failed", e);
-  }
+// ----------------------
+// 옷장/설정 모달
+// ----------------------
+function toastDelta(before, after, label) {
+  const dSto = after.sto - before.sto;
+  const dIse = after.ise - before.ise;
+  const dTar = after.tar - before.tar;
+
+  const msgs = [`${label} 선택!`];
+  if (dSto) msgs.push(`스토마쉐 ${dSto > 0 ? `+${dSto}` : dSto}`);
+  if (dIse) msgs.push(`이세치슈 ${dIse > 0 ? `+${dIse}` : dIse}`);
+  if (dTar) msgs.push(`선배 ${dTar > 0 ? `+${dTar}` : dTar}`);
+  showToast(msgs.join(" / "));
 }
 
-function loadGame() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return false;
-    const data = JSON.parse(raw);
+function openWardrobeModal(renderArgs) {
+  const { textEl, namePlate, choicesEl } = renderArgs;
 
-    const name = String(data.playerName || "").trim();
-    if (!name) return false;
-    playerName = name;
+  openModal("옷장", (body) => {
+    const info = document.createElement("div");
+    info.className = "modalText";
+    info.textContent = `옷을 고르면 누군가는 좋아하고 누군가는 싫어함 ㅎㅎ\n현재 착장: ${state.outfit}`;
+    body.appendChild(info);
 
-    const s = data.state || {};
-    state.scene = s.scene || "day1_morning";
-    state.line = Number.isFinite(s.line) ? s.line : 0;
-    state.affection = Number.isFinite(s.affection) ? s.affection : 0;
-    state.points = (s.points && typeof s.points === "object") ? s.points : { sto: 0, ise: 0, tar: 0 };
-    state.outfit = s.outfit || "uniform";
-    state.settings = s.settings || { autoSave: true };
+    const row = document.createElement("div");
+    row.className = "row";
 
-    return true;
-  } catch (e) {
-    console.warn("load failed", e);
-    return false;
-  }
-}
+    row.appendChild(makeBtn("교복", () => {
+      state.outfit = "uniform";
+      const before = getPointsSnapshot();
+      applyEffect({ ise: +1 });
+      const after = getPointsSnapshot();
+      toastDelta(before, after, "교복");
+      if (state.settings.autoSave) saveGame();
+      closeModal();
+      updateStatusPanelLabels();
+      render(textEl, namePlate, choicesEl);
+    }, "btn small"));
 
-function hasValidSave() {
-  try {
-    const raw = localStorage.getItem(SAVE_KEY);
-    if (!raw) return false;
-    const data = JSON.parse(raw);
-    return !!String(data.playerName || "").trim();
-  } catch {
-    return false;
-  }
-}
+    row.appendChild(makeBtn("후드티", () => {
+      state.outfit = "hoodie";
+      const before = getPointsSnapshot();
+      applyEffect({ sto: +1, ise: -1 });
+      const after = getPointsSnapshot();
+      toastDelta(before, after, "후드티");
+      if (state.settings.autoSave) saveGame();
+      closeModal();
+      updateStatusPanelLabels();
+      render(textEl, namePlate, choicesEl);
+    }, "btn small"));
 
-// ======================
-// 모달 시스템
-// ======================
-function openModal(title, bodyBuilder) {
-  const overlay = document.getElementById("modalOverlay");
-  const t = document.getElementById("modalTitle");
-  const body = document.getElementById("modalBody");
-  t.textContent = title;
-  body.innerHTML = "";
-  bodyBuilder(body);
-  overlay.classList.remove("hidden");
-}
-function closeModal() {
-  document.getElementById("modalOverlay").classList.add("hidden");
-}
-function makeBtn(label, onClick, className = "btn") {
-  const b = document.createElement("button");
-  b.className = className;
-  b.textContent = label;
-  b.addEventListener("click", onClick);
-  return b;
+    row.appendChild(makeBtn("큐티룩", () => {
+      state.outfit = "cute";
+      const before = getPointsSnapshot();
+      applyEffect({ sto: +1, tar: +1 });
+      const after = getPointsSnapshot();
+      toastDelta(before, after, "큐티룩");
+      if (state.settings.autoSave) saveGame();
+      closeModal();
+      updateStatusPanelLabels();
+      render(textEl, namePlate, choicesEl);
+    }, "btn small primary"));
+
+    body.appendChild(row);
+  });
 }
 
-// ======================
-// 상태창
-// ======================
-function refreshStatusPanel() {
-  document.getElementById("stoStatus").textContent = String(state.points.sto ?? 0);
-  document.getElementById("iseStatus").textContent = String(state.points.ise ?? 0);
-  document.getElementById("tarStatus").textContent = String(state.points.tar ?? 0);
-  document.getElementById("outfitLabel").textContent = String(state.outfit);
-  document.getElementById("autosaveLabel").textContent = state.settings.autoSave ? "ON" : "OFF";
-}
-function openStatus() {
-  refreshStatusPanel();
-  document.getElementById("statusOverlay").classList.remove("hidden");
-}
-function closeStatus() {
-  document.getElementById("statusOverlay").classList.add("hidden");
+function openSettingsModal() {
+  openModal("설정", (body) => {
+    const wrap = document.createElement("div");
+    wrap.className = "modalText";
+
+    const line = document.createElement("div");
+    line.textContent = `자동저장: ${state.settings.autoSave ? "ON" : "OFF"}`;
+    wrap.appendChild(line);
+
+    const row = document.createElement("div");
+    row.className = "row";
+    row.appendChild(makeBtn("자동저장 토글", () => {
+      state.settings.autoSave = !state.settings.autoSave;
+      saveGame();
+      showToast(`자동저장 ${state.settings.autoSave ? "ON" : "OFF"}`);
+      closeModal();
+      updateStatusPanelLabels();
+    }, "btn small"));
+    wrap.appendChild(row);
+
+    body.appendChild(wrap);
+  });
 }
 
-// ======================
+// ----------------------
 // DOM 연결
-// ======================
+// ----------------------
 window.addEventListener("DOMContentLoaded", () => {
+  // screens
   const titleScreen = document.getElementById("titleScreen");
-  const nameScreen  = document.getElementById("nameScreen");
-  const gameScreen  = document.getElementById("gameScreen");
+  const nameScreen = document.getElementById("nameScreen");
+  const gameScreen = document.getElementById("gameScreen");
 
+  // sprites
+  leftSprite = document.getElementById("leftSprite");
+  rightSprite = document.getElementById("rightSprite");
+
+  // title buttons
   const goStart = document.getElementById("goStart");
   const goContinue = document.getElementById("goContinue");
   const goIntro = document.getElementById("goIntro");
@@ -628,10 +913,12 @@ window.addEventListener("DOMContentLoaded", () => {
   const goWardrobe = document.getElementById("goWardrobe");
   const goSettings = document.getElementById("goSettings");
 
+  // name screen
   const nameInput = document.getElementById("nameInput");
   const startBtn = document.getElementById("startBtn");
   const backToTitle1 = document.getElementById("backToTitle1");
 
+  // game ui
   const textEl = document.getElementById("text");
   const choicesEl = document.getElementById("choices");
   dialogueBox = document.getElementById("dialogueBox");
@@ -643,61 +930,48 @@ window.addEventListener("DOMContentLoaded", () => {
   const loadBtn = document.getElementById("loadBtn");
   const resetBtn = document.getElementById("resetBtn");
 
+  // status overlay
+  const statusOverlay = document.getElementById("statusOverlay");
   const closeStatusBtn = document.getElementById("closeStatusBtn");
   const closeStatusBtn2 = document.getElementById("closeStatusBtn2");
 
+  // modal
   const closeModalBtn = document.getElementById("closeModalBtn");
   const modalOkBtn = document.getElementById("modalOkBtn");
+  const modalOverlay = document.getElementById("modalOverlay");
 
-  // 이어하기 버튼 활성/비활성
-  goContinue.disabled = !hasValidSave();
-  goContinue.style.opacity = goContinue.disabled ? ".55" : "1";
-
-  function showTitle() {
-    titleScreen.classList.remove("hidden");
-    nameScreen.classList.add("hidden");
-    gameScreen.classList.add("hidden");
-  }
-  function showName() {
-    titleScreen.classList.add("hidden");
-    nameScreen.classList.remove("hidden");
-    gameScreen.classList.add("hidden");
-  }
-  function showGame() {
-    titleScreen.classList.add("hidden");
-    nameScreen.classList.add("hidden");
-    gameScreen.classList.remove("hidden");
+  // 필수 체크
+  const must = [
+    titleScreen, nameScreen, gameScreen,
+    goStart, goContinue, goIntro, goChars, goWardrobe, goSettings,
+    nameInput, startBtn, backToTitle1,
+    textEl, choicesEl, dialogueBox, namePlate,
+    menuBtn, statusBtn, saveBtn, loadBtn, resetBtn,
+    statusOverlay, closeStatusBtn, closeStatusBtn2,
+    closeModalBtn, modalOkBtn, modalOverlay
+  ];
+  if (must.some(v => !v)) {
+    alert("index.html id 누락 있음! (버튼/오버레이/모달/스프라이트 id 확인)");
+    return;
   }
 
-  // 모달 닫기
-  closeModalBtn.addEventListener("click", closeModal);
-  modalOkBtn.addEventListener("click", closeModal);
-  document.getElementById("modalOverlay").addEventListener("click", (e) => {
-    if (e.target.id === "modalOverlay") closeModal();
+  // 초기 화면
+  showScreen("titleScreen");
+  goContinue.disabled = !localStorage.getItem(SAVE_KEY);
+
+  // 타이틀 버튼
+  goStart.addEventListener("click", () => {
+    nameInput.value = "";
+    showScreen("nameScreen");
   });
 
-  // 상태창 닫기
-  closeStatusBtn.addEventListener("click", closeStatus);
-  closeStatusBtn2.addEventListener("click", closeStatus);
-  document.getElementById("statusOverlay").addEventListener("click", (e) => {
-    if (e.target.id === "statusOverlay") closeStatus();
-  });
-  window.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") { closeModal(); closeStatus(); }
-  });
-
-  // 타이틀: 새로 시작 → 이름 화면
-  goStart.addEventListener("click", () => showName());
-
-  // 타이틀: 이어하기 → 바로 게임
   goContinue.addEventListener("click", () => {
     const ok = loadGame();
     if (!ok) return alert("저장 데이터가 없어!");
-    showGame();
+    showScreen("gameScreen");
     render(textEl, namePlate, choicesEl);
   });
 
-  // 타이틀: 게임 소개
   goIntro.addEventListener("click", () => {
     openModal("게임 소개", (body) => {
       const p = document.createElement("div");
@@ -705,14 +979,13 @@ window.addEventListener("DOMContentLoaded", () => {
       p.textContent =
         "목표: 보선녀 VN을 ‘진짜 게임’처럼 완성해서 플레이스토어에 올리기!\n\n" +
         "Day 1에서 시작해 스토마쉐/이세치슈/선배와의 관계를 선택으로 바꾸며 엔딩을 만든다.\n" +
-        "옷장/설정/상태창 같은 ‘메뉴 시스템’을 갖춘 미연시로 개발 중!";
+        "옷장/설정/상태창/메뉴 같은 ‘게임 기능’을 계속 추가하는 중.";
       body.appendChild(p);
     });
   });
 
-  // 타이틀: 캐릭터
   goChars.addEventListener("click", () => {
-    openModal("캐릭터 소개", (body) => {
+    openModal("캐릭터", (body) => {
       const p = document.createElement("div");
       p.className = "modalText";
       p.textContent =
@@ -723,134 +996,82 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 타이틀: 옷장 (호감도 변화)
-  goWardrobe.addEventListener("click", () => {
-    openModal("옷장", (body) => {
-      const info = document.createElement("div");
-      info.className = "modalText";
-      info.textContent =
-        `옷을 고르면 누군가는 좋아하고 누군가는 싫어함 ㅎㅎ\n현재 착장: ${state.outfit}\n\n` +
-        "※ 시작 전에 골라도 저장됨!";
-      body.appendChild(info);
+  goWardrobe.addEventListener("click", () => openWardrobeModal({ textEl, namePlate, choicesEl }));
+  goSettings.addEventListener("click", () => openSettingsModal());
 
-      const row = document.createElement("div");
-      row.className = "row";
+  // 이름 입력 화면
+  backToTitle1.addEventListener("click", () => showScreen("titleScreen"));
 
-      row.appendChild(makeBtn("교복", () => {
-        state.outfit = "uniform";
-        applyEffect({ ise: +1 });
-        showToast("교복 선택! 이세치슈 +1");
-        if (state.settings.autoSave) saveGame();
-        closeModal();
-      }, "btn small"));
-
-      row.appendChild(makeBtn("후드티", () => {
-        state.outfit = "hoodie";
-        applyEffect({ sto: +1, ise: -1 });
-        showToast("후드티 선택! 스토마쉐 +1 / 이세치슈 -1");
-        if (state.settings.autoSave) saveGame();
-        closeModal();
-      }, "btn small"));
-
-      row.appendChild(makeBtn("큐티룩", () => {
-        state.outfit = "cute";
-        applyEffect({ sto: +1, tar: +1 });
-        showToast("큐티룩 선택! 스토마쉐 +1 / 선배 +1");
-        if (state.settings.autoSave) saveGame();
-        closeModal();
-      }, "btn small primary"));
-
-      body.appendChild(row);
-    });
-  });
-
-  // 타이틀: 설정
-  goSettings.addEventListener("click", () => {
-    openModal("설정", (body) => {
-      const p = document.createElement("div");
-      p.className = "modalText";
-      p.textContent = `자동저장: ${state.settings.autoSave ? "ON" : "OFF"}`;
-      body.appendChild(p);
-
-      const row = document.createElement("div");
-      row.className = "row";
-
-      row.appendChild(makeBtn("자동저장 토글", () => {
-        state.settings.autoSave = !state.settings.autoSave;
-        showToast(`자동저장 ${state.settings.autoSave ? "ON" : "OFF"}`);
-        if (state.settings.autoSave) saveGame();
-        closeModal();
-      }, "btn small primary"));
-
-      body.appendChild(row);
-    });
-  });
-
-  // 이름 화면: 뒤로
-  backToTitle1.addEventListener("click", () => showTitle());
-
-  // 이름 화면: 시작
   startBtn.addEventListener("click", () => {
     const input = nameInput.value.trim();
     if (!input) return alert("이름을 입력해줘!");
     playerName = input;
 
-    // 새로 시작 = 점수/진행만 초기화 (옷/설정은 유지 가능)
+    // 새게임 초기화
     state.scene = "day1_morning";
     state.line = 0;
     state.affection = 0;
     state.points = { sto: 0, ise: 0, tar: 0 };
+    state.outfit = "uniform";
+    if (!state.settings) state.settings = { autoSave: true };
 
     saveGame();
-    showGame();
-    render(textEl, namePlate, choicesEl);
+    goContinue.disabled = false;
 
-    // 이어하기 버튼 갱신
-    goContinue.disabled = !hasValidSave();
-    goContinue.style.opacity = goContinue.disabled ? ".55" : "1";
+    showScreen("gameScreen");
+    render(textEl, namePlate, choicesEl);
   });
 
-  // 게임 진행(대사창 클릭)
+  // 게임 화면 버튼들
+  menuBtn.addEventListener("click", () => {
+    openModal("메뉴", (body) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.appendChild(makeBtn("게임 소개", () => { closeModal(); goIntro.click(); }, "btn small"));
+      row.appendChild(makeBtn("캐릭터", () => { closeModal(); goChars.click(); }, "btn small"));
+      row.appendChild(makeBtn("옷장", () => { closeModal(); openWardrobeModal({ textEl, namePlate, choicesEl }); }, "btn small"));
+      row.appendChild(makeBtn("설정", () => { closeModal(); openSettingsModal(); }, "btn small"));
+      body.appendChild(row);
+
+      const row2 = document.createElement("div");
+      row2.className = "row";
+      row2.appendChild(makeBtn("타이틀로", () => {
+        closeModal();
+        showScreen("titleScreen");
+      }, "btn danger"));
+      body.appendChild(row2);
+    });
+  });
+
+  statusBtn.addEventListener("click", () => {
+    updateStatusPanelLabels();
+    openOverlay("statusOverlay");
+  });
+
+  closeStatusBtn.addEventListener("click", () => closeOverlay("statusOverlay"));
+  closeStatusBtn2.addEventListener("click", () => closeOverlay("statusOverlay"));
+  statusOverlay.addEventListener("click", (e) => {
+    if (e.target === statusOverlay) closeOverlay("statusOverlay");
+  });
+
+  // 대사창 클릭 = 진행
   dialogueBox.addEventListener("click", () => {
     if (choicesEl.childElementCount > 0) return;
     advance(textEl, namePlate, choicesEl);
   });
 
-  // 게임 메뉴 버튼
-  menuBtn.addEventListener("click", () => {
-    openModal("메뉴", (body) => {
-      const row = document.createElement("div");
-      row.className = "row";
-
-      row.appendChild(makeBtn("게임 소개", () => { closeModal(); goIntro.click(); }, "btn small"));
-      row.appendChild(makeBtn("캐릭터", () => { closeModal(); goChars.click(); }, "btn small"));
-      row.appendChild(makeBtn("옷장", () => { closeModal(); goWardrobe.click(); }, "btn small"));
-      row.appendChild(makeBtn("설정", () => { closeModal(); goSettings.click(); }, "btn small"));
-      row.appendChild(makeBtn("타이틀로", () => {
-        closeModal();
-        showTitle();
-      }, "btn small danger"));
-
-      body.appendChild(row);
-    });
-  });
-
-  // 상태창
-  statusBtn.addEventListener("click", openStatus);
-
   // 저장/불러오기/리셋
   saveBtn.addEventListener("click", () => {
     saveGame();
-    alert("저장 완료!");
-    goContinue.disabled = !hasValidSave();
-    goContinue.style.opacity = goContinue.disabled ? ".55" : "1";
+    goContinue.disabled = false;
+    showToast("저장 완료!");
   });
 
   loadBtn.addEventListener("click", () => {
     const ok = loadGame();
     if (!ok) return alert("저장 데이터가 없어!");
     render(textEl, namePlate, choicesEl);
-    alert("불러오기 완료!");
+    showToast("불러오기 완료!");
   });
 
   resetBtn.addEventListener("click", () => {
@@ -859,6 +1080,17 @@ window.addEventListener("DOMContentLoaded", () => {
     location.reload();
   });
 
-  // 처음 화면 표시
-  showTitle();
+  // 모달 닫기
+  closeModalBtn.addEventListener("click", closeModal);
+  modalOkBtn.addEventListener("click", closeModal);
+  modalOverlay.addEventListener("click", (e) => {
+    if (e.target === modalOverlay) closeModal();
+  });
+
+  // ESC로 닫기
+  window.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    closeOverlay("statusOverlay");
+    closeModal();
+  });
 });
