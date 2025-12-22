@@ -132,7 +132,7 @@ body{
   position:absolute;
   left:50%;
   transform:translateX(-50%);
-  bottom:190px;
+  bottom: 230px;
   width:min(640px, calc(100% - 32px));
   display:flex;
   gap:10px;
@@ -279,3 +279,234 @@ body{
   font-size:13px;
   margin-bottom:10px;
 }
+/* ===== Modal ===== */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  z-index: 9999;
+}
+.modalOverlay.hidden { display: none; }
+
+.modalPanel {
+  width: min(520px, 92vw);
+  border: 1px solid rgba(255,255,255,.12);
+  background: rgba(15, 18, 28, .95);
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,.45);
+  overflow: hidden;
+}
+
+.modalHeader, .modalFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.modalFooter {
+  border-bottom: none;
+  border-top: 1px solid rgba(255,255,255,.08);
+  justify-content: flex-end;
+}
+.modalTitle { font-weight: 800; }
+
+.modalBody {
+  padding: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+.modalText { opacity: .95; }
+
+.row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+/* =========================
+   VN 필수 UI 스타일 세트
+   (toast / overlay / modal / hidden)
+   ========================= */
+
+/* 공통 */
+.hidden { display: none !important; }
+.row { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+
+/* 버튼 기본 (이미 있으면 생략 가능) */
+.btn { padding: 10px 14px; border: 0; border-radius: 12px; cursor: pointer; }
+.btn.small { padding: 8px 10px; border-radius: 10px; font-size: 13px; }
+.btn.primary { font-weight: 700; }
+.btn.danger { font-weight: 700; }
+
+/* 선택지 버튼 */
+.choiceBtn {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 0;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+/* 토스트 */
+.toast {
+  position: absolute;
+  left: 50%;
+  bottom: 140px;
+  transform: translateX(-50%) translateY(8px);
+  min-width: 240px;
+  max-width: min(520px, 92vw);
+  padding: 12px 14px;
+  border-radius: 14px;
+  opacity: 0;
+  pointer-events: none;
+  white-space: pre-line;
+  transition: opacity .18s ease, transform .18s ease;
+  /* 배경/글자색은 너 테마에 맞게 바꾸면 됨 */
+  background: rgba(0,0,0,0.72);
+  color: #fff;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  z-index: 50;
+}
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* 오버레이/모달 */
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  background: rgba(0,0,0,0.55);
+  z-index: 100;
+}
+
+.modal {
+  width: min(720px, 92vw);
+  max-height: min(82vh, 680px);
+  overflow: auto;
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(20, 24, 34, 0.96);
+  color: #fff;
+  box-shadow: 0 16px 50px rgba(0,0,0,0.45);
+}
+
+.modalHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 6px 10px;
+}
+
+.modalTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.modalBody {
+  padding: 10px 6px 14px;
+}
+
+.modalText {
+  white-space: pre-line;
+  line-height: 1.55;
+  opacity: 0.95;
+}
+
+/* 상태창 카드들 */
+.statusGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.statusCard {
+  border-radius: 16px;
+  padding: 12px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+.statusName { font-weight: 800; opacity: 0.9; margin-bottom: 6px; }
+.statusVal { font-size: 22px; font-weight: 900; }
+
+.mini {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+  opacity: 0.9;
+}
+
+/* 대사창(기본) */
+.dialogue {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(920px, 92vw);
+  border-radius: 18px;
+  padding: 14px;
+  background: rgba(10, 12, 18, 0.78);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+.namePlate {
+  display: inline-block;
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-weight: 900;
+  background: rgba(255,255,255,0.10);
+  margin-bottom: 8px;
+}
+
+.text { white-space: pre-line; line-height: 1.6; min-height: 64px; }
+
+.nextHint {
+  margin-top: 8px;
+  opacity: 0.75;
+  font-size: 12px;
+  text-align: right;
+}
+
+/* stage 위치 기준 (toast absolute 때문에 필요) */
+.stage { position: relative; }
+/* =========================
+   캐릭터 스프라이트 레이어
+   ========================= */
+.spriteLayer{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index: 5; /* bg보다 위, 대사창/선택지보다 아래 */
+}
+
+.sprite{
+  position:absolute;
+  bottom: 120px; /* 대사창이랑 겹치지 않게 */
+  height: min(78vh, 720px);
+  max-width: 44vw;
+  object-fit: contain;
+  filter: drop-shadow(0 16px 28px rgba(0,0,0,0.45));
+  opacity: 0.98;
+}
+
+.sprite.left { left: 3vw; }
+.sprite.right { right: 3vw; }
+
+/* 말하는 캐릭터 강조(나중에 JS로 토글할거임) */
+.sprite.dim { opacity: 0.45; filter: grayscale(0.2) drop-shadow(0 12px 22px rgba(0,0,0,0.35)); }
