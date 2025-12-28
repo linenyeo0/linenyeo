@@ -59,11 +59,12 @@
 
     <main class="stage">
       <div class="bg"></div>
-<!-- 캐릭터 스프라이트 레이어 -->
-<div class="spriteLayer">
-  <img id="leftSprite" class="sprite left hidden" alt="left character" />
-  <img id="rightSprite" class="sprite right hidden" alt="right character" />
-</div>
+
+      <!-- 캐릭터 스프라이트 레이어 -->
+      <div class="spriteLayer">
+        <img id="leftSprite" class="sprite left hidden" alt="left character" />
+        <img id="rightSprite" class="sprite right hidden" alt="right character" />
+      </div>
 
       <!-- 선택지 -->
       <div id="choices" class="choices"></div>
@@ -102,6 +103,17 @@
             <div class="statusName">선배</div>
             <div id="tarStatus" class="statusVal">0</div>
           </div>
+
+          <!-- ✅ 여기로 옮김(안정적으로 보이게) -->
+          <div class="statusCard hidden" id="ribCard">
+            <div class="statusName">리복매</div>
+            <div id="ribStatus" class="statusVal">0</div>
+          </div>
+
+          <div class="statusCard hidden" id="araCard">
+            <div class="statusName">아라랑궁</div>
+            <div id="araStatus" class="statusVal">0</div>
+          </div>
         </div>
 
         <div class="mini">
@@ -132,6 +144,12 @@
     </div>
   </div>
 
+  <script src="js/scenes.day1.js"></script>
+  <script src="js/scenes.day2.js"></script>
+  <script src="js/scenes.day3.js"></script>
+  <script src="js/scenes.day4.js"></script>
+  <script src="js/scenes.day5.js"></script>
   <script src="main.js"></script>
+
 </body>
 </html>
