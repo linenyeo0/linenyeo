@@ -383,18 +383,19 @@ function render(textEl, namePlateEl, choicesEl) {
   // sprite auto
   if (cur.type === "dialogue") {
     const sp = repName(cur.speaker);
-    if (sp.includes("스토마쉐")) {
-      setSprite("left", "img/sto.png");
-      setSpeaking("left");
-    } else if (sp.includes("이세치슈")) {
-      setSprite("right", "img/ise.png");
-      setSpeaking("right");
-    } else {
-      setSpeaking(null);
-    }
-  } else {
-    setSpeaking(null);
-  }
+   if (sp.includes("스토마쉐")) {
+  setSprite("left", "images/sto_idle.png");
+  setSpeaking("left");
+} else if (sp.includes("이세치슈")) {
+  setSprite("right", "images/ise_idle.png");
+  setSpeaking("right");
+} else if (sp.includes("타루렐") || sp.includes("선배")) {
+  setSprite("left", "images/tar_idle.png"); // 선배는 일단 왼쪽에 세움(원하면 right로 바꿔)
+  setSpeaking("left");
+} else {
+  setSpeaking(null);
+}}
+
 
   // 출력
   choicesEl.innerHTML = "";
